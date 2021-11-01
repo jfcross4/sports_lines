@@ -51,4 +51,13 @@ vegas_season_away <- vegas_season_away[,colnames(vegas_season_home)]
 
 vegas_season <- rbind(vegas_season_home, vegas_season_away)
 
-m <- lm(score ~ team + opp, data=vegas_season)
+m.off <- lm(score ~ team + opp, data=vegas_season)
+summary(m.off)
+
+
+
+library(lme4)
+
+m.regressed <- lmer(score ~ (1|team) + (1|opp), data=vegas_season)
+summary(m.regressed)
+coef(m.regressed)
