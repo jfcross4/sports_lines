@@ -1,7 +1,7 @@
 # sports_lines
 
-#test555
-#test101
+## Thoughts on Kaggle
+https://www.kaggle.com/jaredcross/log5-logistic-regression-and-bradley-te
 
 
 ## Prediction Tracker
