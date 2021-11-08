@@ -6,6 +6,9 @@ https://www.kaggle.com/jaredcross/log5-logistic-regression-and-bradley-te
 ## College Football play-by-play data
 https://sportsdatastuff.com/cfb_pbpdata
 
+## NFL play by play data
+http://nflsavant.com/about.php
+
 ## Prediction Tracker
 https://www.thepredictiontracker.com/football.php
 
