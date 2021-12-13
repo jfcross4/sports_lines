@@ -5,7 +5,7 @@
 library(readr); library(dplyr)
 
 
-pbp_2021 <- read_csv("~/Downloads/pbp-2021.csv")
+pbp_2021 <- read_csv("pbp-2021.csv")
 
 pbp_2021 <- pbp_2021 %>%
   mutate(min_remaining = 60 - (Quarter * 15) + Minute + (Second / 60))
