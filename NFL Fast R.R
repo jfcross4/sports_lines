@@ -32,7 +32,7 @@ data_slim <- data_slim %>%
 # posteam_type says whether the team with possesion is the home or away team
 
 freddie <- rpart(win ~ score_differential+posteam_type, 
-                 data=data_slim, maxdepth=2, cp=0)
+                 data=data_slim, maxdepth=3, cp=0)
 prp(freddie)
 
 one_game <- data %>% mutate(game_id = "2019_01_ATL_MIN")
