@@ -61,3 +61,9 @@ library(lme4)
 m.regressed <- lmer(score ~ (1|team) + (1|opp), data=vegas_season)
 summary(m.regressed)
 coef(m.regressed)
+
+vegas_season <- vegas_season %>% mutate(score_diff = score-opp.score)
+
+m.regressed <- lmer(score_diff ~ (1|team) + (1|opp), data=vegas_season)
+summary(m.regressed)
+coef(m.regressed)

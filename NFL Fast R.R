@@ -7,16 +7,17 @@ library(rpart.plot)
 library(randomForest)
 
 data <- load_pbp(2007:2021)
-dplyr::glimpse(data)
-hist(data$wp)
+# dplyr::glimpse(data)
+# hist(data$wp)
 
 ## add variables (spread, timeouts, ball in 2nd half, home team, time remaining in half, 
 ## ratio of point differential)
+# https://www.opensourcefootball.com/posts/2020-09-28-nflfastr-ep-wp-and-cp-models/
 
 data_orig <- data %>% filter(two_point_attempt==0) %>%
   filter(!(play_type %in% c("no_play", "kickoff", "extra_point")))
 
-hist(data_orig$wp)
+# hist(data_orig$wp)
 
 data_slim <- data %>% filter(two_point_attempt==0) %>%
     filter(!(play_type %in% c("no_play", "kickoff", "extra_point"))) %>%
@@ -117,15 +118,57 @@ Sys.time()-t
 hist(predict(rf, newdata = test))
 varImpPlot(rf,type=2)
 
-test$predictions = predict(rf, newdata = test)
+test$predictions_rf = predict(rf, newdata = test)
 
 test <- test %>% filter(!is.na(predictions), !is.na(wp))
 
 RMSE(test$predictions, test$win_pos_team)
 RMSE(test$wp, test$win_pos_team)
 
-ggplot(test, aes(predictions, win_pos_team))+geom_point()+geom_smooth()
+ggplot(test, aes(predictions, wp))+geom_point()+geom_smooth()
+
+
+data_pred = train %>% dplyr::select(score_differential,
+                         game_seconds_remaining, yardline_100,  
+                         down, ydstogo)
+
+data_test = test %>% dplyr::select(score_differential,
+                                   game_seconds_remaining, yardline_100,  
+                                   down, ydstogo) %>% as.matrix()
 
 
 library(xgboost)
+dtrain <- xgb.DMatrix(data = as.matrix(data_pred), 
+                      label = train$win_pos_team)
+
+
+bst <- xgboost(data = dtrain, max.depth = 3, eta = 0.3, 
+               nthread = 2, nrounds = 600, 
+               objective = "binary:logistic", verbose = 1)
+
+
+test$predictions <- predict(bst, data_test)
+
+
+RMSE(test$predictions, test$win_pos_team)
+RMSE(test$wp, test$win_pos_team)
+
+#0.4044245 Random Forest
+#0.4036977 Xgboost, maxdepth=3, nrounds =400, eta = 0.5
+#0.4041334 Xgboost, maxdepth=3, nrounds =600, eta = 0.5
+#0.4033112 Xgboost, maxdepth=3, nrounds =600, eta = 0.3
+
+
+
+with(test, cor(predictions, predictions_rf)) # our two model 0.976
+with(test, cor(predictions, wp)) # our xgboost and their xgboost: 0.979
+with(test, cor(predictions_rf, wp)) # our rf and their xgboost 0.970
+
+
+RMSE(0.7*test$predictions + 0.3*test$predictions_rf, test$win_pos_team)
+
+lm(win_pos_team ~ predictions_rf + predictions + wp, data=test)
+
+
+# use vegas info going into the game (the spread or the money line)
 
