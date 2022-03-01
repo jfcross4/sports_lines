@@ -123,7 +123,7 @@ test$predictions_rf = predict(rf, newdata = test)
 test <- test %>% filter(!is.na(predictions), !is.na(wp))
 
 RMSE(test$predictions, test$win_pos_team)
-RMSE(test$wp, test$win_pos_team)
+RMSE(test$wp, test$win_pos_team) #0.4011665
 
 ggplot(test, aes(predictions, wp))+geom_point()+geom_smooth()
 
@@ -171,4 +171,26 @@ lm(win_pos_team ~ predictions_rf + predictions + wp, data=test)
 
 
 # use vegas info going into the game (the spread or the money line)
+
+cv <- xgb.cv(data = dtrain, nrounds = 600, nthread = 2, 
+             nfold = 5, metrics = list("rmse","auc"),
+             max_depth = 3, eta = 0.3, objective = "binary:logistic",
+             prediction=TRUE)
+
+min_rmse_index  = which.min(cv$evaluation_log$test_rmse_mean)
+min_rmse <-  cv$evaluation_log[min_rmse_index]$test_rmse_mean
+
+plot(1:600, cv$evaluation_log$test_rmse_mean, 
+     ylim=c(0.401, 0.405), ylab="Test RMSE", xlab="nrounds", 
+     main="xgboost with eta=0.3 and max_depth=3, nfold=5")
+# best 0.4020158 with 140 rounds
+
+
+
+cv <- xgb.cv(data = dtrain, nrounds = 600, nthread = 2, 
+             nfold = 5, metrics = list("rmse","auc"),
+             max_depth = 3, eta = 0.1, objective = "binary:logistic",
+             prediction=TRUE)
+# best 0.4019126 with 412 rounds
+
 
