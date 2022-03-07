@@ -1,5 +1,15 @@
 # sports_lines
 
+## To do:  replace posteam names:
+
+#   posteam     n
+#   <chr>   <int>
+# 1 LA       9981  --> STL
+# 2 LAC     11605 --> SD
+# 3 LV      14464 --> OAK
+
+ then match up with over/unders and add lines and over/unders to model
+
 ## Thoughts on Kaggle
 https://www.kaggle.com/jaredcross/log5-logistic-regression-and-bradley-te
 

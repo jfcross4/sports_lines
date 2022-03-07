@@ -5,8 +5,20 @@ library(nflfastR)
 library(rpart)
 library(rpart.plot)
 library(randomForest)
+library(nflreadr) # for schedules
 
 data <- load_pbp(2007:2021)
+
+games <- read.csv("games.csv")
+
+lines <- games %>% 
+  dplyr::select(game_id, home_team, away_team, spread_line, total_line)
+
+line_away <- lines %>% select(game_id, team = away_team, spread_line)
+line_home <- lines %>% select(game_id, team = home_team, spread_line) %>%
+  mutate(spread_line = -1*spread_line)
+spreads = rbind(line_away, line_home)
+
 # dplyr::glimpse(data)
 # hist(data$wp)
 
@@ -21,8 +33,13 @@ data_orig <- data %>% filter(two_point_attempt==0) %>%
 
 data_slim <- data %>% filter(two_point_attempt==0) %>%
     filter(!(play_type %in% c("no_play", "kickoff", "extra_point"))) %>%
-  dplyr::select(away_score, home_score, score_differential, 
+  dplyr::select(game_id, posteam, away_score, home_score, score_differential, 
   game_seconds_remaining, yardline_100, posteam_type, down, ydstogo, wp)
+
+data_slim = left_join(data_slim, 
+                      spreads,
+          by=c("game_id", "posteam"="team")
+          )
 
 data_slim <- data_slim %>% 
   mutate(win_home_team = 1*(home_score > away_score), 
