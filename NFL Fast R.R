@@ -36,6 +36,24 @@ data_slim <- data %>% filter(two_point_attempt==0) %>%
   dplyr::select(game_id, posteam, away_score, home_score, score_differential, 
   game_seconds_remaining, yardline_100, posteam_type, down, ydstogo, wp)
 
+spreads = spreads %>% mutate(team = as.character(team),
+  team = case_when(
+    team ==  "STL"~ "LA",
+    team == "SD"~ "LAC",
+    team ==  "OAK" ~ "LV",
+    !(team %in% c("STL", "SD", "OAK")) ~ team
+  )
+)
+
+data_slim = data_slim %>% mutate(posteam = as.character(posteam),
+                             posteam = case_when(
+                               posteam ==  "STL"~ "LA",
+                               posteam == "SD"~ "LAC",
+                               posteam ==  "OAK" ~ "LV",
+                               !(posteam %in% c("STL", "SD", "OAK")) ~ posteam
+                             )
+)
+
 data_slim = left_join(data_slim, 
                       spreads,
           by=c("game_id", "posteam"="team")
@@ -46,6 +64,8 @@ data_slim <- data_slim %>%
          end_game_diff = home_score - away_score,
          win_pos_team = ifelse(posteam_type=="home", win_home_team, 1-win_home_team)
          )
+
+
 
 # score differential is from possession teams point of view (at the time of the play)
 # posteam_type says whether the team with possesion is the home or away team
@@ -127,7 +147,7 @@ test = data_slim[-sample_rows, ]
 t <- Sys.time()
 rf <- randomForest(win_pos_team~score_differential+
                      game_seconds_remaining + yardline_100 + 
-                     down+ydstogo, data=train, mtry=3,
+                     down+ydstogo+spread_line, data=train, mtry=3,
                    ntree=30,
                    na.action=na.omit, nodesize=100)
 Sys.time()-t
@@ -147,11 +167,11 @@ ggplot(test, aes(predictions, wp))+geom_point()+geom_smooth()
 
 data_pred = train %>% dplyr::select(score_differential,
                          game_seconds_remaining, yardline_100,  
-                         down, ydstogo)
+                         down, ydstogo, spread_line)
 
 data_test = test %>% dplyr::select(score_differential,
                                    game_seconds_remaining, yardline_100,  
-                                   down, ydstogo) %>% as.matrix()
+                                   down, ydstogo, spread_line) %>% as.matrix()
 
 
 library(xgboost)
@@ -169,6 +189,8 @@ test$predictions <- predict(bst, data_test)
 
 RMSE(test$predictions, test$win_pos_team)
 RMSE(test$wp, test$win_pos_team)
+
+AAE(test$predictions, test$win_pos_team)
 
 #0.4044245 Random Forest
 #0.4036977 Xgboost, maxdepth=3, nrounds =400, eta = 0.5
