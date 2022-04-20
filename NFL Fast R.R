@@ -5,19 +5,9 @@ library(nflfastR)
 library(rpart)
 library(rpart.plot)
 library(randomForest)
-library(nflreadr) # for schedules
+#library(nflreadr) # for schedules
 
-data <- load_pbp(2007:2021)
 
-games <- read.csv("games.csv")
-
-lines <- games %>% 
-  dplyr::select(game_id, home_team, away_team, spread_line, total_line)
-
-line_away <- lines %>% select(game_id, team = away_team, spread_line)
-line_home <- lines %>% select(game_id, team = home_team, spread_line) %>%
-  mutate(spread_line = -1*spread_line)
-spreads = rbind(line_away, line_home)
 
 # dplyr::glimpse(data)
 # hist(data$wp)
@@ -26,44 +16,12 @@ spreads = rbind(line_away, line_home)
 ## ratio of point differential)
 # https://www.opensourcefootball.com/posts/2020-09-28-nflfastr-ep-wp-and-cp-models/
 
-data_orig <- data %>% filter(two_point_attempt==0) %>%
-  filter(!(play_type %in% c("no_play", "kickoff", "extra_point")))
 
-# hist(data_orig$wp)
 
-data_slim <- data %>% filter(two_point_attempt==0) %>%
-    filter(!(play_type %in% c("no_play", "kickoff", "extra_point"))) %>%
-  dplyr::select(game_id, posteam, away_score, home_score, score_differential, 
-  game_seconds_remaining, yardline_100, posteam_type, down, ydstogo, wp)
 
-spreads = spreads %>% mutate(team = as.character(team),
-  team = case_when(
-    team ==  "STL"~ "LA",
-    team == "SD"~ "LAC",
-    team ==  "OAK" ~ "LV",
-    !(team %in% c("STL", "SD", "OAK")) ~ team
-  )
-)
 
-data_slim = data_slim %>% mutate(posteam = as.character(posteam),
-                             posteam = case_when(
-                               posteam ==  "STL"~ "LA",
-                               posteam == "SD"~ "LAC",
-                               posteam ==  "OAK" ~ "LV",
-                               !(posteam %in% c("STL", "SD", "OAK")) ~ posteam
-                             )
-)
 
-data_slim = left_join(data_slim, 
-                      spreads,
-          by=c("game_id", "posteam"="team")
-          )
 
-data_slim <- data_slim %>% 
-  mutate(win_home_team = 1*(home_score > away_score), 
-         end_game_diff = home_score - away_score,
-         win_pos_team = ifelse(posteam_type=="home", win_home_team, 1-win_home_team)
-         )
 
 
 
@@ -84,8 +42,6 @@ data_slim <- data_slim %>%
 #   data_slim %>% group_by(predictions) %>% 
 #     summarize(n=n(), mean(win_pos_team))
   
-AAE <- function(x, y){ mean(abs(x-y))}
-RMSE <- function(x, y){ sqrt(mean((x-y)^2))}
 
 
 # data_slim %>% summarize(AAE(predictions, win_pos_team)) #0.319
