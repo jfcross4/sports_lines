@@ -1,3 +1,14 @@
+library(tidyverse)
+library(ggrepel)
+library(ggimage)
+library(nflfastR)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+
+source("utils.R")
+
+
 load("data_with_rf_predictions.RData")
 load("data_with_rf_predictions2.RData")
 

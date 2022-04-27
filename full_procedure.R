@@ -21,7 +21,14 @@ test = data_slim[-sample_rows, ]
 ### random forest model on training set
 rf <- randomForest(win_pos_team~score_differential+
                      game_seconds_remaining + yardline_100 + 
-                     down+ydstogo+spread_line, data=train, mtry=3,
+                     down+ydstogo+spread_line+
+                     posteam_timeouts_remaining+
+                     defteam_timeouts_remaining+ 
+                   half_seconds_remaining+
+                     diff_time_ratio+
+                     spread_time+
+                     gets_ball_second_half
+                     , data=train, mtry=3,
                    ntree=60,
                    na.action=na.omit, nodesize=100)
 
@@ -34,9 +41,9 @@ data_slim$predictions_rf = predict(rf, newdata = data_slim)
 save(data_slim, file="data_with_rf_predictions2.RData")
 
 
-test <- test %>% filter(!is.na(predictions), !is.na(wp))
+test <- test %>% filter(!is.na(predictions_rf), !is.na(wp))
 
-RMSE(test$predictions, test$win_pos_team)
+RMSE(test$predictions_rf, test$win_pos_team)
 RMSE(test$wp, test$win_pos_team)
 
 
